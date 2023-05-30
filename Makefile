@@ -1,37 +1,40 @@
-ROOT := ~/projects/toy-os
+C_SOURCES = $(wildcard kernel/*.c drivers/*.c cpu/*.c)
+HEADERS = $(wildcard kernel/*.h drivers/*.h cpu/*.h)
+OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o} 
 
-SRCS := $(wildcard *.c) $(wildcard */*.c) $(wildcard *.s) $(wildcard */*.s)
+CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
+GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
+CFLAGS = -g
 
-COBJS := $(patsubst %.c, %.o, $(filter %.c, $(SRCS)))
+myos.bin: boot/bootsect.bin kernel.bin
+	cat $^ > myos.bin
 
-SOBJS := $(patsubst %.s, %.o, $(filter %.s, $(SRCS)))
 
-EXECUTABLE := myos.bin
+kernel.bin: boot/kernel_entry.o ${OBJ}
+	i386-elf-ld -o $@ -Ttext 0x1000 $^ --oformat binary
 
-LINKER_SCRIPT := linker.ld
+kernel.elf: boot/kernel_entry.o ${OBJ}
+	i386-elf-ld -o $@ -Ttext 0x1000 $^ 
 
-LDFLAGS := -T $(LINKER_SCRIPT) -ffreestanding -O2 -nostdlib -lgcc
+run: myos.bin
+	qemu-system-i386 -fda myos.bin
 
-CFLAGS := -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+debug: myos.bin kernel.elf
+	qemu-system-i386 -s -fda myos.bin -d guest_errors,int &
+	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
 
-%.o: %.c
-	i386-elf-gcc $(CFLAGS) -c $< -o $@
 
-%.o: %.s
-	i386-elf-as $< -o $@
+%.o: %.c ${HEADERS}
+	${CC} ${CFLAGS} -ffreestanding -c $< -o $@
 
-$(EXECUTABLE): $(COBJS) $(SOBJS)
-	i386-elf-gcc $(LDFLAGS) $^ -o $@
+%.o: %.asm
+	nasm $< -f elf -o $@
 
-copy:
-	cp myos.bin $(ROOT)/iso/boot/myos.bin
+%.bin: %.asm
+	nasm $< -f bin -o $@
 
-boot:
-	cd $(ROOT)
-	grub-mkrescue -o myos.iso iso
-	qemu-system-x86_64 -cdrom myos.iso
-
-all: $(EXECUTABLE) copy boot
+all: myos.bin run
 
 clean:
-	$(RM) $(COBJS) $(SOBJS) $(EXECUTABLE) *.iso $(ROOT)/iso/boot/myos.bin
+	rm -rf *.bin *.dis *.o myos.bin *.elf
+	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o

@@ -1,14 +1,10 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include "port.h"
+#define VIDEO_ADDRESS 0xb8000
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
-
 
 typedef enum {
     VGA_COLOR_BLACK = 0,
@@ -29,8 +25,9 @@ typedef enum {
     VGA_COLOR_WHITE = 15,
 } vga_color;
 
-void terminal_initialize(void);
-void terminal_putchar(char c);
-void terminal_writestring(const char *data);
+/* Public kernel API */
+void clear_screen();
+void print_at(char *message, int col, int row);
+void screen_print(const char *message);
 
 #endif
