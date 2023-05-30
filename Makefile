@@ -24,7 +24,7 @@ $(EXECUTABLE): $(COBJS) $(SOBJS)
 	i386-elf-gcc $(LDFLAGS) $^ -o $@
 
 copy:
-	mv myos.bin $(ROOT)/iso/boot/myos.bin
+	cp myos.bin $(ROOT)/iso/boot/myos.bin
 
 boot:
 	cd $(ROOT)
