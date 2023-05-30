@@ -30,6 +30,7 @@ typedef enum {
 } vga_color;
 
 void terminal_initialize(void);
+void terminal_putchar(char c);
 void terminal_writestring(const char *data);
 
 #endif
