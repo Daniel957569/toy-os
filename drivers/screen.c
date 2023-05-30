@@ -42,6 +42,7 @@ void clear_screen(void) {
     screen_column = 0;
     screen_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
     screen_buffer = (uint16_t *)0xB8000;
+    move_cursor(0);
 
     for (size_t y = 0; y < VGA_HEIGHT; y++) {
         for (size_t x = 0; x < VGA_WIDTH; x++) {
