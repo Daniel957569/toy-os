@@ -1,5 +1,5 @@
-; Defined in isr.c
 [extern isr_handler]
+[extern irq_handler]
 
 ; Common ISR code
 isr_common_stub:
@@ -27,12 +27,25 @@ isr_common_stub:
 	sti
 	iret ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
 	
-; We don't get information about which interrupt was caller
-; when the handler is run, so we will need to have a different handler
-; for every interrupt.
-; Furthermore, some interrupts push an error code onto the stack but others
-; don't, so we will push a dummy error code for those which don't, so that
-; we have a consistent stack for all of them.
+irq_common_stub:
+    pusha 
+    mov ax, ds
+    push eax
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    call irq_handler ; Different than the ISR code
+    pop ebx  ; Different than the ISR code
+    mov ds, bx
+    mov es, bx
+    mov fs, bx
+    mov gs, bx
+    popa
+    add esp, 8
+    sti
+    iret 
 
 ; First make the ISRs global
 global isr0
