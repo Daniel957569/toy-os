@@ -27,7 +27,11 @@ typedef enum {
 
 /* Public kernel API */
 void clear_screen();
-void print_at(char *message, int col, int row);
+void screen_putchar(char c);
+void screen_backspace();
 void screen_print(const char *message);
+
+void handle_ctrl_w();
+void handle_ctrl_c();
 
 #endif

@@ -4,11 +4,28 @@
 #include "ports.h"
 #include "screen.h"
 
-#define print_char(ch1, ch2) screen_print(shift ? ch1 : ch2)
+#define print_char(ch1, ch2) screen_putchar(caps_lock ? ch1 : ch2)
+#define char_uppercase(ch) (char)ch - 32 
 
-bool shift = false;
+bool caps_lock = false;
+bool ctrl_pressed = false;
 
 void print_letter(uint8_t scancode);
+
+static void handle_char_press(char c) {
+    if (ctrl_pressed) {
+        switch (c) {
+        case 'w':
+            handle_ctrl_w();
+        case 'c':
+            handle_ctrl_c();
+        defualt:
+            return;
+        }
+    }
+
+    print_char(char_uppercase(c), c);
+}
 
 static void keyboard_callback(registers_t regs) {
     uint8_t scancode = port_byte_in(0x60);
@@ -65,40 +82,41 @@ void print_letter(uint8_t scancode) {
         screen_print("+");
         break;
     case 0x0E:
+        screen_backspace();
         // screen_print("Backspace");
         break;
     case 0x0F:
         screen_print("Tab");
         break;
     case 0x10:
-        print_char("Q", "q");
+        handle_char_press('q');
         break;
     case 0x11:
-        print_char("W", "w");
+        handle_char_press('w');
         break;
     case 0x12:
-        print_char("E", "w");
+        handle_char_press('w');
         break;
     case 0x13:
-        print_char("R", "r");
+        handle_char_press('r');
         break;
     case 0x14:
-        print_char("T", "t");
+        handle_char_press('t');
         break;
     case 0x15:
-        print_char("Y", "y");
+        handle_char_press('y');
         break;
     case 0x16:
-        print_char("U", "u");
+        handle_char_press('u');
         break;
     case 0x17:
-        print_char("I", "i");
+        handle_char_press('i');
         break;
     case 0x18:
-        print_char("O", "o");
+        handle_char_press('o');
         break;
     case 0x19:
-        print_char("P", "p");
+        handle_char_press('p');
         break;
     case 0x1A:
         screen_print("[");
@@ -110,34 +128,35 @@ void print_letter(uint8_t scancode) {
         // screen_print("ENTER");
         break;
     case 0x1D:
+        ctrl_pressed = true;
         // screen_print("LCtrl");
         break;
     case 0x1E:
-        print_char("A", "a");
+        handle_char_press('a');
         break;
     case 0x1F:
-        print_char("S", "s");
+        handle_char_press('s');
         break;
     case 0x20:
-        print_char("D", "d");
+        handle_char_press('d');
         break;
     case 0x21:
-        print_char("F", "f");
+        handle_char_press('f');
         break;
     case 0x22:
-        print_char("G", "g");
+        handle_char_press('g');
         break;
     case 0x23:
-        print_char("H", "h");
+        handle_char_press('h');
         break;
     case 0x24:
-        print_char("J", "j");
+        handle_char_press('j');
         break;
     case 0x25:
-        print_char("K", "k");
+        handle_char_press('k');
         break;
     case 0x26:
-        print_char("L", "l");
+        handle_char_press('l');
         break;
     case 0x27:
         screen_print(";");
@@ -155,25 +174,25 @@ void print_letter(uint8_t scancode) {
         screen_print("\\");
         break;
     case 0x2C:
-        print_char("Z", "z");
+        handle_char_press('z');
         break;
     case 0x2D:
-        print_char("X", "x");
+        handle_char_press('x');
         break;
     case 0x2E:
-        print_char("C", "c");
+        handle_char_press('c');
         break;
     case 0x2F:
-        print_char("V", "v");
+        handle_char_press('v');
         break;
     case 0x30:
-        print_char("B", "b");
+        handle_char_press('b');
         break;
     case 0x31:
-        print_char("N", "n");
+        handle_char_press('n');
         break;
     case 0x32:
-        print_char("M", "m");
+        handle_char_press('m');
         break;
     case 0x33:
         screen_print(",");
@@ -194,10 +213,14 @@ void print_letter(uint8_t scancode) {
         // screen_print("LAlt");
         break;
     case 0x39:
+        screen_print(" ");
         // screen_print("Spc");
         break;
     case 0x3A:
-        shift = !shift;
+        caps_lock = !caps_lock;
+        break;
+    case 0x9D:
+        ctrl_pressed = !ctrl_pressed;
         break;
     default:
         break;
