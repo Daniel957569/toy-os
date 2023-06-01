@@ -1,5 +1,5 @@
 #include "screen.h"
-#include "../kernel/util.h"
+#include "../libc/string.h"
 #include "ports.h"
 #include "screen.h"
 
@@ -11,56 +11,12 @@
 
 #define SCREEN_POS_AS_CHAR(pos) ((screen_buffer[pos] & 0xFF))
 
-static void BYTE_TO_BITS(int byte) {
-    screen_print("yooo the byte: ");
-    (byte & 0x8000) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x4000) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x2000) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x1000) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0800) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0400) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0200) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0100) ? screen_putchar('1') : screen_putchar('0');
-    screen_putchar(' ');
-    (byte & 0x0080) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0040) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0020) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0010) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0008) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0004) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0002) ? screen_putchar('1') : screen_putchar('0');
-    (byte & 0x0001) ? screen_putchar('1') : screen_putchar('0');
-    screen_putchar('\n');
-
-    screen_print("upper 8 bits = ");
-    char str[100];
-    int byte1 = byte;
-    int_to_ascii((byte1 >> 8) & 0xFF, str);
-    screen_print(str);
-    screen_putchar('\n');
-
-    screen_print("lower 8 bits = ");
-    char str2[100];
-    int byte2 = byte;
-    int_to_ascii(byte2 & 0xFF, str2);
-    screen_print(str2);
-    screen_putchar('\n');
-}
-
 static inline uint8_t vga_entry_color(vga_color fg, vga_color bg) {
     return fg | bg << 4;
 }
 
 static inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
     return (uint16_t)uc | (uint16_t)color << 8;
-}
-
-size_t strlen(const char *str) {
-    size_t len = 0;
-    while (str[len])
-        len++;
-
-    return len;
 }
 
 size_t screen_row;
@@ -175,13 +131,71 @@ void screen_write(const char *data, size_t size) {
         screen_putchar(data[i]);
 }
 
-void screen_print(const char *data) { screen_write(data, strlen(data)); }
+void screen_print(char *data) { screen_write(data, strlen(data)); }
 
-void handle_ctrl_c() {
+void screen_print_decimal(uint32_t n) {
+
+    if (n == 0) {
+        screen_putchar('0');
+        return;
+    }
+
+    int32_t acc = n;
+
+    char c[32];
+    int i = 0;
+    while (acc > 0) {
+        c[i] = '0' + acc % 10;
+        acc /= 10;
+        i++;
+    }
+    c[i] = 0;
+
+    char c2[32];
+    c2[i--] = 0;
+    int j = 0;
+    while (i >= 0) {
+        c2[i--] = c[j++];
+    }
+    screen_print(c2);
+}
+
+void handle_ctrl_c(char *buffer) {
     // whatever
 }
 
-void handle_ctrl_w() {
+void screen_print_hex(uint32_t n) {
+    int32_t tmp;
+
+    screen_print("0x");
+
+    char noZeroes = 1;
+
+    int i;
+    for (i = 28; i > 0; i -= 4) {
+        tmp = (n >> i) & 0xF;
+        if (tmp == 0 && noZeroes != 0) {
+            continue;
+        }
+
+        if (tmp >= 0xA) {
+            noZeroes = 0;
+            screen_putchar(tmp - 0xA + 'a');
+        } else {
+            noZeroes = 0;
+            screen_putchar(tmp + '0');
+        }
+    }
+
+    tmp = n & 0xF;
+    if (tmp >= 0xA) {
+        screen_putchar(tmp - 0xA + 'a');
+    } else {
+        screen_putchar(tmp + '0');
+    }
+}
+
+void handle_ctrl_w(char *buffer) {
     bool has_consume_char = false;
     while (1) {
         size_t pos = current_screen_pos();
@@ -191,5 +205,6 @@ void handle_ctrl_w() {
 
         has_consume_char = true;
         screen_backspace();
+        pop_char(buffer);
     }
 }

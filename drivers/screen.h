@@ -1,6 +1,8 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
+#include "../common.h"
+
 #define VIDEO_ADDRESS 0xb8000
 
 #define VGA_WIDTH 80
@@ -29,9 +31,11 @@ typedef enum {
 void clear_screen();
 void screen_putchar(char c);
 void screen_backspace();
-void screen_print(const char *message);
+void screen_print(char *message);
+void screen_print_decimal(uint32_t n);
+void screen_print_hex(uint32_t n);
 
-void handle_ctrl_w();
-void handle_ctrl_c();
+void handle_ctrl_w(char* buffer);
+void handle_ctrl_c(char* buffer);
 
 #endif

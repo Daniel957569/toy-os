@@ -1,10 +1,11 @@
-C_SOURCES = $(wildcard kernel/*.c drivers/*.c cpu/*.c)
-HEADERS = $(wildcard kernel/*.h drivers/*.h cpu/*.h)
+C_SOURCES = $(wildcard *.c) $(wildcard */*.c)
+HEADERS = $(wildcard *.h) $(wildcard */*.h)
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o} 
 
 CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
 GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
-CFLAGS = -g
+CFLAGS = -g -m32 -nostdlib -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs  -Wall -Wextra 
+
 
 myos.bin: boot/bootsect.bin kernel.bin
 	cat $^ > myos.bin
@@ -21,7 +22,7 @@ run: myos.bin
 
 debug: myos.bin kernel.elf
 	qemu-system-i386 -s -fda myos.bin -d guest_errors,int &
-	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
+	gdb  myos.bin
 
 
 %.o: %.c ${HEADERS}
