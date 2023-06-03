@@ -1,15 +1,22 @@
 #ifndef STRING_H
 #define STRING_H
 
-#include "../common.h"
+#include "common.h"
 
-void int_to_ascii(int n, char *str);
-void reverse_string(char *s);
-int strlen(char *s);
-void append(char *dest, char c);
-void pop_char(char* str);
-int strcmp(char* s1, char* s2);
-void clear_string(char* str);
+size_t strlen(const char *str);
 
+size_t strnlen(const char *str, size_t count);
+int strncmp(const char *str1, const char *str2, size_t count);
+char *strncpy(char *dst, const char *src, size_t count);
+char *strncat(char *dst, const char *src, size_t count);
+
+bool isdigit(char c);
+bool isxdigit(char c);
+
+bool isalpha(char c);
+bool islower(char c);
+bool isupper(char c);
+
+bool isspace(char c);
 
 #endif

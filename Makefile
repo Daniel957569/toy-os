@@ -1,41 +1,83 @@
-C_SOURCES = $(wildcard *.c) $(wildcard */*.c)
-HEADERS = $(wildcard *.h) $(wildcard */*.h)
-OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o} 
+TARGET_BIN=myos.bin
+TARGET_ISO=myos.iso
 
-CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
-GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
-CFLAGS = -g -m32 -nostdlib -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs  -Wall -Wextra 
+C_SOURCES=$(shell find ./ -name "*.c")
+C_OBJECTS=$(patsubst %.c, %.o, $(C_SOURCES))
 
+S_SOURCES=$(shell find ./ -name "*.s")
+S_OBJECTS=$(patsubst %.s, %.o, $(S_SOURCES))
 
-myos.bin: boot/bootsect.bin kernel.bin
-	cat $^ > myos.bin
+ASM=i386-elf-as
 
+CC=i386-elf-gcc
+C_FLAGS=-c -Wall -Wextra -ffreestanding -O2 -std=gnu99
 
-kernel.bin: boot/kernel_entry.o ${OBJ}
-	i386-elf-ld -o $@ -Ttext 0x1000 $^ --oformat binary
-
-kernel.elf: boot/kernel_entry.o ${OBJ}
-	i386-elf-ld -o $@ -Ttext 0x1000 $^ 
-
-run: myos.bin
-	qemu-system-i386 -fda myos.bin
-
-debug: myos.bin kernel.elf
-	qemu-system-i386 -s -fda myos.bin -d guest_errors,int &
-	gdb  myos.bin
+LD=i386-elf-gcc
+LD_FLAGS=-ffreestanding -O2 -nostdlib
 
 
-%.o: %.c ${HEADERS}
-	${CC} ${CFLAGS} -ffreestanding -c $< -o $@
 
-%.o: %.asm
-	nasm $< -f elf -o $@
+#
+# Targets for building.
+#
+all: $(S_OBJECTS) $(C_OBJECTS) kernel verify update qemu
 
-%.bin: %.asm
-	nasm $< -f bin -o $@
+$(S_OBJECTS): %.o: %.s
+	@echo
+	@echo "Compiling kernel assembly '$<'..."
+	$(ASM) $(ASM_FLAGS) -o $@ $<
 
-all: myos.bin run
+$(C_OBJECTS): %.o: %.c
+	@echo
+	@echo  "Compiling kernel C code '$<'..."
+	$(CC) $(C_FLAGS) -o $@ $<
 
+kernel: $(C_OBJECTS) $(S_OBJECTS)
+	@echo
+	@echo "Linking kernel image..."  # Remember to link 'libgcc'.
+	$(LD) $(LD_FLAGS) -T linker.ld -lgcc -o $(TARGET_BIN) $(S_OBJECTS) $(C_OBJECTS)
+
+
+#
+# Verify GRUB multiboot sanity.
+#
+.PHONY: verify
+verify:
+	@if grub-file --is-x86-multiboot $(TARGET_BIN); then \
+        echo;                                            \
+        echo  "VERIFY MULTIBOOT: Confirmed ✓"; \
+    else                                                 \
+        echo;                                            \
+        echo  "VERIFY MULTIBOOT: FAILED ✗";    \
+    fi
+
+
+#
+# Update CDROM image.
+#
+.PHONY: update
+update:
+	@echo
+	@echo "Writing to CDROM..."
+	    cp $(TARGET_BIN) iso/boot/$(TARGET_BIN)
+	   grub-mkrescue -o $(TARGET_ISO) iso
+
+
+#
+# Launching QEMU/debugging.
+#
+.PHONY: qemu
+qemu:
+	@echo
+	@echo "Launching QEMU..."
+	qemu-system-i386 -vga std -cdrom $(TARGET_ISO)
+
+
+#
+# Clean the produced files.
+#
+.PHONY: clean
 clean:
-	rm -rf *.bin *.dis *.o myos.bin *.elf
-	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o
+	@echo
+	@echo "Cleaning the build..."
+	rm -f $(S_OBJECTS) $(C_OBJECTS) $(TARGET_BIN) $(TARGET_ISO)

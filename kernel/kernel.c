@@ -1,29 +1,17 @@
-#include "../cpu/idt.h"
-#include "../cpu/isr.h"
-#include "../cpu/timer.h"
-#include "../drivers/keyboard.h"
-#include "../drivers/screen.h"
-#include "paging.h"
+#include "../display/screen.h"
+#include "../devices/timer.h"
+#include "../interrupt/idt.h"
+#include "../libc/printf.h"
+#include "../libc/string.h"
+#include "../memory/gdt.h"
 
-int main() {
-    clear_screen();
-    isr_install();
-    irq_install();
-    screen_print("Hello, paging world!\n");
-    // initialise_paging();
+void kernel_main(unsigned long magic, unsigned long addr) {
+  terminal_init();
+  gdt_init();
+  idt_init();
+  timer_init();
+  asm volatile("sti");
 
-    // uint32_t *ptr = (uint32_t *)0xA0000000;
-    // uint32_t do_page_fault = *ptr;
-
-    return 0;
-}
-
-void user_input(char *input) {
-    if (strcmp(input, "END") == 0) {
-        screen_print("Stopping the CPU. Bye!\n");
-        asm volatile("hlt");
-    }
-    screen_print("You said: ");
-    screen_print(input);
-    screen_print("\n> ");
+  while (1) // CPU idles with a `hlt` loop.
+    asm volatile("hlt");
 }
