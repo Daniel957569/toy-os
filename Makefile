@@ -20,7 +20,7 @@ LD_FLAGS=-ffreestanding -O2 -nostdlib
 #
 # Targets for building.
 #
-all: $(S_OBJECTS) $(C_OBJECTS) kernel verify update qemu
+all: clean $(S_OBJECTS) $(C_OBJECTS)  kernel verify update qemu
 
 $(S_OBJECTS): %.o: %.s
 	@echo

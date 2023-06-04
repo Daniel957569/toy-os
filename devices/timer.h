@@ -3,6 +3,6 @@
 
 #define TIMER_FREQ_HZ 20
 
-void timer_init();
+void timer_init(int frequency);
 
 #endif

@@ -8,14 +8,14 @@ int tick = 0;
 
 static void timer_interrupt_handler(interrupt_state_t *state) {
   (void)state; /** Unused. */
-  printf("\ntick: %d", tick);
-  tick++;
+  // printf("\ntick: %d", tick);
+  // tick++;
 }
 
-void timer_init(void) {
+void timer_init(int frequnecy) {
   isr_register(INT_NO_TIMER, &timer_interrupt_handler);
 
-  uint16_t divisor = 1193182 / TIMER_FREQ_HZ;
+  uint16_t divisor = 1193182 / frequnecy;
 
   outb(0x43, 0x36); /** Run in mode 3. */
 
