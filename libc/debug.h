@@ -13,6 +13,8 @@
 
 #define USER_MAX 0x40000000
 
+extern uint32_t elf_sections_end;
+
 void debug_init(multiboot_info_t *mbi);
 void stack_trace();
 

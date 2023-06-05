@@ -13,6 +13,8 @@ static size_t elf_symtab_size;
 static const char *elf_strtab;
 static size_t elf_strtab_size;
 
+uint32_t elf_sections_end;
+
 uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 
 __attribute__((noreturn)) void __stack_chk_fail(void) {
@@ -60,6 +62,8 @@ void debug_init(multiboot_info_t *mbi) {
       elf_strtab = (const char *)sht[i].addr;
       elf_strtab_size = sht[i].size;
     }
+    if (sht[i].addr + sht[i].size > elf_sections_end)
+      elf_sections_end = sht[i].addr + sht[i].size;
   }
 }
 

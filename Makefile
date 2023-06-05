@@ -8,6 +8,15 @@ C_OBJECTS=$(patsubst %.c, %.o, $(C_SOURCES))
 S_SOURCES=$(shell find ./ -name "*.s")
 S_OBJECTS=$(patsubst %.s, %.o, $(S_SOURCES))
 
+PREFIX := /usr/local/i386elfgcc
+TARGET := i386-elf
+PATH := $(PREFIX)/bin:$(PATH)
+
+# Export variables
+export PREFIX
+export TARGET
+export PATH
+
 ASM=i386-elf-as
 
 OBJCOPY=i386-elf-objcopy
@@ -87,8 +96,8 @@ qemu-debug:
 	@echo $(HUX_MSG) "Launching QEMU (debug mode)..."
 	qemu-system-i386 -vga std -S -s -cdrom $(TARGET_ISO)
 
-.PHONY: gdb-debug
-gdb-debug:
+.PHONY: gdb
+gdb:
 	@echo $(HUX_MSG) "Launching gdb (debug mode)..."
 	gdb -ex "target remote localhost:1234" -ex "symbol-file myos.sym"
 
