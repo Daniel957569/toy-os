@@ -1,5 +1,6 @@
 TARGET_BIN=myos.bin
 TARGET_ISO=myos.iso
+TARGET_SYM=myos.sym
 
 C_SOURCES=$(shell find ./ -name "*.c")
 C_OBJECTS=$(patsubst %.c, %.o, $(C_SOURCES))
@@ -9,8 +10,12 @@ S_OBJECTS=$(patsubst %.s, %.o, $(S_SOURCES))
 
 ASM=i386-elf-as
 
+OBJCOPY=i386-elf-objcopy
+OBJDUMP=i386-elf-objdump
+
 CC=i386-elf-gcc
-C_FLAGS=-c -Wall -Wextra -ffreestanding -O2 -std=gnu99
+C_FLAGS=-c -Wall -Wextra -ffreestanding -O2 -std=gnu99 -Wno-tautological-compare \
+        -g -fno-omit-frame-pointer -fstack-protector
 
 LD=i386-elf-gcc
 LD_FLAGS=-ffreestanding -O2 -nostdlib
@@ -35,7 +40,10 @@ $(C_OBJECTS): %.o: %.c
 kernel: $(C_OBJECTS) $(S_OBJECTS)
 	@echo
 	@echo "Linking kernel image..."  # Remember to link 'libgcc'.
-	$(LD) $(LD_FLAGS) -T linker.ld -lgcc -o $(TARGET_BIN) $(S_OBJECTS) $(C_OBJECTS)
+	$(LD) $(LD_FLAGS) -T linker.ld -lgcc -o $(TARGET_BIN) \
+	-Wl,--oformat,elf32-i386 $(S_OBJECTS) $(C_OBJECTS)
+	$(OBJCOPY) --only-keep-debug $(TARGET_BIN) $(TARGET_SYM)
+	$(OBJCOPY) --strip-debug $(TARGET_BIN)
 
 
 #
@@ -71,6 +79,18 @@ qemu:
 	@echo
 	@echo "Launching QEMU..."
 	qemu-system-i386 -vga std -cdrom $(TARGET_ISO)
+
+
+#debug with gdb
+.PHONY: qemu-debug
+qemu-debug:
+	@echo $(HUX_MSG) "Launching QEMU (debug mode)..."
+	qemu-system-i386 -vga std -S -s -cdrom $(TARGET_ISO)
+
+.PHONY: gdb-debug
+gdb-debug:
+	@echo $(HUX_MSG) "Launching gdb (debug mode)..."
+	gdb -ex "target remote localhost:1234" -ex "symbol-file myos.sym"
 
 
 #

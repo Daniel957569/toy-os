@@ -51,6 +51,11 @@ _start:
     /** Setup the kernel stack by setting ESP to our 'stack_hi' symbol. */
     movl $stack_hi, %esp
 
+    xor %ebp, %ebp
+
+    pushl %ebx
+    pushl %eax
+
     /**
      * Other processor state modifications and runtime supports (such as
      * enabling paging) should go here. Make sure your ESP is still 16 Bytes

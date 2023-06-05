@@ -8,8 +8,8 @@ int tick = 0;
 
 static void timer_interrupt_handler(interrupt_state_t *state) {
   (void)state; /** Unused. */
-  // printf("\ntick: %d", tick);
-  // tick++;
+  printf("\ntick: %d", tick);
+  tick++;
 }
 
 void timer_init(int frequnecy) {

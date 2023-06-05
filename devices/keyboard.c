@@ -677,10 +677,11 @@ static void keyboard_interrupt_handler(interrupt_state_t *state) {
 
     if (extendcode < 0xE0)
       event = extendcode_event_map[extendcode];
-  }
+  } 
 
-  if (event.press && event.ascii)
-    cprintf(VGA_COLOR_LIGHT_BROWN, "%c", event.info.codel);
+  if (event.press && event.ascii) {
+    cprintf(VGA_COLOR_LIGHT_BROWN, "%c", capslock_on ? event.info.codeu : event.info.codel);
+  }
 }
 
 void keyboard_init() {
