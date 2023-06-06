@@ -122,7 +122,6 @@ static void page_fault_handler(interrupt_state_t *state) {
 
 void paging_init(void) {
     kheap_curr = ADDR_PAGE_ROUND_UP((uint32_t)elf_sections_end);
-    printf("\n%d", kheap_curr);
 
     frame_bitmap = (uint8_t *)_kalloc_temp(NUM_FRAMES / 8, false);
     memset(frame_bitmap, 0, NUM_FRAMES / 8);

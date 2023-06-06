@@ -7,19 +7,19 @@
 int tick = 0;
 
 static void timer_interrupt_handler(interrupt_state_t *state) {
-  (void)state; /** Unused. */
-  printf("\ntick: %d", tick);
-  tick++;
+    (void)state; /** Unused. */
+    printf("\ntick: %d", tick);
+    tick++;
 }
 
 void timer_init(int frequnecy) {
-  isr_register(INT_NO_TIMER, &timer_interrupt_handler);
+    isr_register(INT_NO_TIMER, &timer_interrupt_handler);
 
-  uint16_t divisor = 1193182 / frequnecy;
+    uint16_t divisor = 1193182 / frequnecy;
 
-  outb(0x43, 0x36); /** Run in mode 3. */
+    outb(0x43, 0x36); /** Run in mode 3. */
 
-  /** Sends frequency divisor, in lo | hi order. */
-  outb(0x40, (uint8_t)(divisor & 0xFF));
-  outb(0x40, (uint8_t)((divisor >> 8) & 0xFF));
+    /** Sends frequency divisor, in lo | hi order. */
+    outb(0x40, (uint8_t)(divisor & 0xFF));
+    outb(0x40, (uint8_t)((divisor >> 8) & 0xFF));
 }
