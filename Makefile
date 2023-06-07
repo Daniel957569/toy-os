@@ -109,4 +109,4 @@ gdb:
 clean:
 	@echo
 	@echo "Cleaning the build..."
-	rm -f $(S_OBJECTS) $(C_OBJECTS) $(TARGET_BIN) $(TARGET_ISO)
+	rm -f $(S_OBJECTS) $(C_OBJECTS) $(TARGET_BIN) $(TARGET_ISO) $(TARGET_SYM) ./iso/boot/myos.bin
