@@ -19,6 +19,8 @@ static inline void _init_message(char *msg) {
 
 static inline void _init_message_ok(void) { cprintf(VGA_COLOR_GREEN, " OK\n"); }
 
+extern uint32_t kheap_curr;
+
 void kernel_main(unsigned long magic, unsigned long addr) {
     terminal_init();
 

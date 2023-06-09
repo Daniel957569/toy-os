@@ -4,6 +4,7 @@
 #include "../libc/common.h"
 
 #define KHEAP_MAGIC 0xFBCA0739
+#define KHEAP_MAX PAGE_SLAB_MIN
 
 struct free_list_node_header {
     size_t size;

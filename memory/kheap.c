@@ -2,9 +2,10 @@
 #include "../libc/debug.h"
 #include "../libc/memory.h"
 #include "paging.h"
+#include "slabs.h"
 
 static uint32_t kheap_btm;
-static uint32_t kheap_top = KMEM_MAX;
+static uint32_t kheap_top;
 
 static fl_header_t *bottom_most_header; /** Address-wise smallest node. */
 static fl_header_t *last_search_header; /** Where the last search ends. */
@@ -61,7 +62,7 @@ uint32_t kalloc(size_t size) {
                 last_search_header = header_last;
             }
 
-            /** Update smallest-address node. */
+           /** Update smallest-address node. */
             if (header_curr == bottom_most_header)
                 bottom_most_header = header_new;
 
@@ -182,7 +183,7 @@ void kfree(void *addr) {
 
 void kheap_init(void) {
     kheap_btm = kheap_curr;
-    kheap_top = KMEM_MAX;
+    kheap_top = KHEAP_MAX;
 
     fl_header_t *header = (fl_header_t *)kheap_btm;
     uint32_t size = (kheap_top - kheap_btm) - sizeof(fl_header_t);
